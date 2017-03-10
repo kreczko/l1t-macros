@@ -56,7 +56,7 @@ void TL1Rates::InitPlots()
     fPlot.back()->SetDirectory(0);
     fPlot.back()->GetXaxis()->SetTitle(fXTitle.c_str());
     fPlot.back()->GetYaxis()->SetTitle("Rate (Hz)");
-    for(int ipu=0; ipu<this->GetPuType().size(); ++ipu)
+    for(unsigned ipu=0; ipu<this->GetPuType().size(); ++ipu)
     {
         fPlot.emplace_back(new TH1F(Form("rates_%s_%s",fXName.c_str(),this->GetPuType()[ipu].c_str()),"", fXBins.size()-1,&(fXBins)[0]));
         fPlot.back()->Sumw2();
@@ -77,7 +77,7 @@ void TL1Rates::OverwritePlots()
     fPlot.back()->GetXaxis()->SetTitle(fXTitle.c_str());
     fPlot.back()->GetYaxis()->SetTitle("Rate (Hz)");
 
-    for(int ipu=0; ipu<this->GetPuType().size(); ++ipu)
+    for(unsigned ipu=0; ipu<this->GetPuType().size(); ++ipu)
     {
         fPlot.push_back((TH1F*)rootFile->Get(Form("%s_%s",this->GetOverwriteHistname().c_str(),this->GetPuType()[ipu].c_str())));
         fPlot.back()->SetDirectory(0);
@@ -91,7 +91,7 @@ void TL1Rates::OverwritePlots()
 void TL1Rates::Fill(const double & xVal, const double & yVal, const int & pu)
 {
     fPlot[0]->Fill(xVal,this->GetPuWeight(pu));
-    for(int ipu=0; ipu<this->GetPuType().size(); ++ipu)
+    for(unsigned ipu=0; ipu<this->GetPuType().size(); ++ipu)
     {
         if( pu >= this->GetPuBins()[ipu] && pu < this->GetPuBins()[ipu+1] ){
             fPlot[ipu+1]->Fill(xVal,this->GetPuWeight(pu));
@@ -123,7 +123,7 @@ void TL1Rates::DrawPlots( const char* name_append)
 
     TCanvas * can2(new TCanvas(Form("can_%f",this->GetRnd()),""));
     TLegend * leg2(new TLegend(0.65,0.55,0.88,0.55+0.05*this->GetPuType().size()));
-    for(int ipu=0; ipu<this->GetPuType().size(); ++ipu)
+    for(unsigned ipu=0; ipu<this->GetPuType().size(); ++ipu)
     {
         TH1F * fPuCumulative = GetCumulative(fPlot[ipu+1]);
 

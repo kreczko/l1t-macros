@@ -78,7 +78,7 @@ void TL1Turnon::InitPlots() {
         temp.back()->GetYaxis()->SetTitle("Number of Entries");
         this->SetColor(temp.back(), i-1, fSeeds.size()-1);
 
-        for(int ipu=0; ipu<this->GetPuType().size(); ++ipu)
+        for(unsigned ipu=0; ipu<this->GetPuType().size(); ++ipu)
         {
             temp.emplace_back(new TH1F(Form("dist_%s_%s_%g_%s",fXName.c_str(),fSeedName.c_str(),fSeeds[i],this->GetPuType()[ipu].c_str()),"", fXBins.size()-1,&(fXBins)[0]));
             temp.back()->SetDirectory(0);
@@ -109,7 +109,7 @@ void TL1Turnon::OverwritePlots()
         temp.back()->GetYaxis()->SetTitle("Number of Entries");
         this->SetColor(temp.back(), i-1, fSeeds.size()-1);
 
-        for(int ipu=0; ipu<this->GetPuType().size(); ++ipu)
+        for(unsigned ipu=0; ipu<this->GetPuType().size(); ++ipu)
         {
             //cout << "GetPuType()[ipu] = " << this->GetPuType()[ipu] << endl;
             temp.push_back((TH1F*)rootFile->Get(Form("%s_%i_%s",this->GetOverwriteHistname().c_str(),(int)fSeeds[i],this->GetPuType()[ipu].c_str())));
@@ -130,7 +130,7 @@ void TL1Turnon::Fill(const double & xVal, const double & seedVal, const int & pu
         if( !(seedVal >= fSeeds[i]) ) break;
         fPlots[i][0]->Fill(xVal,this->GetPuWeight(pu));
 
-        for(int ipu=0; ipu<this->GetPuType().size(); ++ipu)
+        for(unsigned ipu=0; ipu<this->GetPuType().size(); ++ipu)
         {
             if( pu >= this->GetPuBins()[ipu] && pu < this->GetPuBins()[ipu+1] )
                 fPlots[i][ipu+1]->Fill(xVal,this->GetPuWeight(pu));
@@ -149,7 +149,7 @@ void TL1Turnon::DrawPlots(const char* name_append)
         fPlotsRoot->WriteTObject(fPlots[i][0]);
         leg->AddEntry(fPlots[i][0], Form("%s > %g GeV", fSeedTitle.c_str(), fSeeds[i]));
 
-        for(int ipu=0; ipu<this->GetPuType().size(); ++ipu)
+        for(unsigned ipu=0; ipu<this->GetPuType().size(); ++ipu)
         {
             fPlots[i][ipu+1]->Draw("same");
             fPlotsRoot->WriteTObject(fPlots[i][ipu+1]);
@@ -212,7 +212,7 @@ void TL1Turnon::DrawTurnons() {
     nomLeg->SetTextSize(0.04);
     TArrow * arrow = new TArrow();
     double max(0.0);
-    for(int i=1; i<fSeeds.size(); ++i)
+    for(unsigned i=1; i<fSeeds.size(); ++i)
     {
         std::vector<TGraphAsymmErrors*> temp;
         temp.emplace_back(new TGraphAsymmErrors(GetEfficiency(fPlots[0][0], fPlots[i][0])));
@@ -250,7 +250,7 @@ void TL1Turnon::DrawTurnons() {
         TLegend * puLeg(new TLegend(0.65,0.15,0.9,0.15+0.08*this->GetPuType().size(),Form("%s > %g",fSeedTitle.c_str(),fSeeds[i])));
         puLeg->SetTextSize(0.04);
         double puMax(0.0);
-        for(int ipu=0; ipu<GetPuType().size(); ++ipu)
+        for(unsigned ipu=0; ipu<GetPuType().size(); ++ipu)
         {
             temp.emplace_back(new TGraphAsymmErrors(GetEfficiency(fPlots[0][ipu+1], fPlots[i][ipu+1])));
             arrow->SetLineColor(fPlots[i][ipu+1]->GetLineColor());
@@ -326,7 +326,7 @@ void TL1Turnon::DrawFitResults(){
     leg->SetTextSize(0.04);
     seed_leg->SetTextSize(0.04);
 
-    for(int i_seed=0; i_seed<fSeeds.size()-1; ++i_seed){
+    for(unsigned i_seed=0; i_seed<fSeeds.size()-1; ++i_seed){
         errors[i_seed]=new TGraphErrors(GetPuType().size());
         errors_allPu[i_seed]=new TGraphErrors(1);
         errors_allPu[i_seed]->SetMarkerStyle(kOpenCircle);
@@ -355,7 +355,7 @@ void TL1Turnon::DrawFitResults(){
         }
 
         int point=0;
-        for(int ipu=0; ipu<GetPuType().size()+1; ++ipu){
+        for(unsigned ipu=0; ipu<GetPuType().size()+1; ++ipu){
             TF1* params=fFits[i_seed][ipu];
             const int n_pars=4;
             double par[n_pars],err[n_pars];
@@ -401,7 +401,7 @@ void TL1Turnon::DrawFitResults(){
             marker_stop->SetX(mu); marker_stop->SetY(sigma); 
             ++point;
         }
-        for(int ipu=point; ipu<GetPuType().size(); ++ipu){
+        for(unsigned ipu=point; ipu<GetPuType().size(); ++ipu){
             errors[i_seed]->RemovePoint(point);
         }
     }

@@ -56,7 +56,7 @@ void makePlots(const int & CHUNK, const int & NJOBS, const int & NENT, const boo
     }
 
     // Loop
-    for(int i=start; i<end && !COMBINE; ++i)
+    for(unsigned int i=start; i<end && !COMBINE; ++i)
     {
         event->GetEntry(i);
         TL1Progress::PrintProgressBar(i-start, end-start);
