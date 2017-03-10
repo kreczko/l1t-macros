@@ -19,11 +19,7 @@ struct ntuple_cfg {
     std::string outDir;
 };
 
-<<<<<<< c1861961770c348a5b0cdad4c6b74e3b357d5e02
-ntuple_cfg singleMuPeriodH();
-=======
 ntuple_cfg singleMuPeriodH(TString outDirBase);
->>>>>>> Set up for RunH analysis
 ntuple_cfg singleMuRun276243();
 ntuple_cfg singleMuRun281693();
 ntuple_cfg zeroBiasRun276653();
@@ -33,8 +29,7 @@ ntuple_cfg benchmark_cfg();
 // The Ntuple cfg to use:
 ntuple_cfg GetNtuple_cfg()
 {
-  ntuple_cfg config(singleMuPeriodH("/afs/cern.ch/work/b/bkrikler/L1Trigger_studies/"));
-  return config;
+  return benchmark_cfg();
 }
 
 
