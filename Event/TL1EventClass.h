@@ -21,6 +21,7 @@ class TL1EventClass
         bool Next();
         void GetEntry(int i);
         void GetDerivatives();
+        void Reset();
 
         TL1PrimitiveEventClass const * GetPEvent() const;
 
@@ -37,13 +38,33 @@ class TL1EventClass
         // Filter flags
         bool fMuonFilterPassFlag, fMetFilterPassFlag;
         std::vector<bool> fJetFilterPassFlags;
+        
+        struct MissingEt{
+            TVector2 fMET;
+            double phi()const{return fMET.Phi();}
+            double met()const{return fMET.Mod();}
+            void AddEt(double Et, double phi){
+                TVector2 temp(0.0,0.0);
+                temp.SetMagPhi(Et,phi);
+                fMET-=temp;
+            }
+            void Reset(){ fMET.Set(0.,0.); }
+        };
 
         // Recalc L1 MET sums
         double fRecalcL1Met, fRecalcL1MetPhi;
         double fRecalcL1MetHF, fRecalcL1MetPhiHF;
+        MissingEt fRecalcL1Met28Only, fRecalcL1MetNot28, fRecalcL1MetNot28HF;
 
-        double fRecalcL1EmuMet, fRecalcL1EmuMetPhi;
-        double fRecalcL1EmuMetHF, fRecalcL1EmuMetPhiHF;
+        MissingEt fRecalcL1EmuMet;
+        MissingEt fRecalcL1EmuMetHF;
+        MissingEt fRecalcL1EmuMet28Only;
+        MissingEt fRecalcL1EmuMetNot28;
+        MissingEt fRecalcL1EmuMetPUS;
+        MissingEt fRecalcL1EmuMetPUS28;
+        MissingEt fRecalcL1EmuMetPUSHF;
+        MissingEt fRecalcL1EmuMetPUSThresh;
+        MissingEt fRecalcL1EmuMetPUSThreshHF;
 
         // Recalc L1 Ht/Et Sums
         double fRecalcL1Mht, fRecalcL1MhtPhi;
@@ -109,8 +130,53 @@ bool TL1EventClass::Next()
 
 void TL1EventClass::GetEntry(int i)
 {
+    Reset();
     fPrimitiveEvent->GetEntry(i);
     this->GetDerivatives();
+}
+
+void TL1EventClass::Reset(){
+        fL1Met=fL1Mht=fL1Ett=fL1Htt=fL1MetPhi=fL1MhtPhi=0;
+        fL1Mex=fL1Mey=0;
+        fL1EmuMet=fL1EmuMht=fL1EmuEtt=fL1EmuHtt=fL1EmuMetPhi=fL1EmuMhtPhi=0;
+        fL1EmuMex=fL1EmuMey=0;
+        fL1MetHF=fL1MhtHF=fL1EttHF=fL1HttHF=fL1MetPhiHF=fL1MhtPhiHF=0;
+        fL1EmuMetHF=fL1EmuMhtHF=fL1EmuEttHF=fL1EmuHttHF=fL1EmuMetPhiHF=fL1EmuMhtPhiHF=0;
+
+        // Filter flags
+        fMuonFilterPassFlag=fMetFilterPassFlag=false;
+        fJetFilterPassFlags.clear();
+
+        // Recalc L1 MET sums
+        fRecalcL1Met=fRecalcL1MetPhi=0;
+        fRecalcL1MetHF=fRecalcL1MetPhiHF=0;
+        fRecalcL1Met28Only.Reset();fRecalcL1MetNot28.Reset();fRecalcL1MetNot28HF.Reset();
+
+        fRecalcL1EmuMet.Reset();
+        fRecalcL1EmuMetHF.Reset();
+        fRecalcL1EmuMet28Only.Reset();
+        fRecalcL1EmuMetNot28.Reset();
+        fRecalcL1EmuMetPUS.Reset();
+        fRecalcL1EmuMetPUS28.Reset();
+        fRecalcL1EmuMetPUSHF.Reset();
+        fRecalcL1EmuMetPUSThresh.Reset();
+        fRecalcL1EmuMetPUSThreshHF.Reset();
+
+
+        // Recalc L1 Ht/Et Sums
+        fRecalcL1Mht=fRecalcL1MhtPhi=0;
+        fNJetL1Mht=0;
+        fRecalcL1Ett=0;
+
+        // Recalc Reco Ht/Et Sums
+        fRecalcRecoMht=fRecalcRecoMhtPhi=fRecalcRecoHtt=0;
+        fNJetRecoMht=0;
+        fMhtPassFlag=false;
+        fRecalcRecoEtt=0;
+
+        // Jets
+        fIsLeadingRecoJet=fIsMatchedL1Jet=fIsMatchedL1EmuJet=false;
+        fLeadingRecoJetIndex=fMatchedL1JetIndex=fMatchedL1EmuJetIndex=0;
 }
 
 void TL1EventClass::GetDerivatives()
@@ -192,31 +258,31 @@ void TL1EventClass::GetL1Sums()
         {
             int sumType = upgrades->sumType[iter];
             if(sumType == l1t::EtSum::EtSumType::kTotalEt)   fL1Ett = et;
-            if(sumType == l1t::EtSum::EtSumType::kTotalHt)   fL1Htt = et;
-            if(sumType == l1t::EtSum::EtSumType::kMissingEt)
+            else if(sumType == l1t::EtSum::EtSumType::kTotalHt)   fL1Htt = et;
+            else if(sumType == l1t::EtSum::EtSumType::kMissingEt)
             {
                 fL1Met = et;
                 fL1MetPhi = phi;
             }
-            if(sumType == l1t::EtSum::EtSumType::kMissingHt)
+            else if(sumType == l1t::EtSum::EtSumType::kMissingHt)
             {
                 fL1Mht = et;
                 fL1MhtPhi = phi;
             }
-            if(sumType == l1t::EtSum::EtSumType::kTotalEtHF) fL1EttHF = et;
-            if(sumType == l1t::EtSum::EtSumType::kTotalHtHF) fL1HttHF = et;
-            if(sumType == l1t::EtSum::EtSumType::kMissingEtHF)
+            else if(sumType == l1t::EtSum::EtSumType::kTotalEtHF) fL1EttHF = et;
+            else if(sumType == l1t::EtSum::EtSumType::kTotalHtHF) fL1HttHF = et;
+            else if(sumType == l1t::EtSum::EtSumType::kMissingEtHF)
             {
                 fL1MetHF = et;
                 fL1MetPhiHF = phi;
             }
-            if(sumType == l1t::EtSum::EtSumType::kMissingHtHF)
+            else if(sumType == l1t::EtSum::EtSumType::kMissingHtHF)
             {
                 fL1MhtHF = et;
                 fL1MhtPhiHF = phi;
             }
-            if(sumType == l1t::EtSum::EtSumType::kTotalEtx) fL1Mex = et;
-            if(sumType == l1t::EtSum::EtSumType::kTotalEty) fL1Mey = et;
+            else if(sumType == l1t::EtSum::EtSumType::kTotalEtx) fL1Mex = et;
+            else if(sumType == l1t::EtSum::EtSumType::kTotalEty) fL1Mey = et;
         }
     }
 }
@@ -267,8 +333,10 @@ void TL1EventClass::MuonFilter()
         double pt = fPrimitiveEvent->fMuons->pt[jMuon];
         double iso = fPrimitiveEvent->fMuons->iso[jMuon];
         double isLoose = fPrimitiveEvent->fMuons->isLooseMuon[jMuon];
-        if( pt>=20.0 && iso<=0.1 && isLoose==1.0 )
+        if( pt>=20.0 && iso<=0.1 && isLoose==1.0 ){
             pass = true;
+            break;
+        }
     }
     fMuonFilterPassFlag = pass;
 }
@@ -370,48 +438,85 @@ void TL1EventClass::GetRecalcL1Ett()
 
 void TL1EventClass::GetRecalcL1Met()
 {
-    TVector2 met(0.0,0.0), metHF(0.0,0.0);
+    MissingEt met, metHF;
+    fRecalcL1Met28Only.Reset(); fRecalcL1MetNot28.Reset(); fRecalcL1MetNot28HF.Reset();
     auto caloTowers = fPrimitiveEvent->fCaloTowers;
-    int ieta(0);
-    double phi(0.0), et(0.0);
     for(int jTower=0; jTower<caloTowers->nTower; ++jTower)
     {
-        ieta = caloTowers->ieta[jTower];
-        phi = (TMath::Pi()/36.0) * (double)caloTowers->iphi[jTower];
-        et = 0.5 * (double)caloTowers->iet[jTower];
-        TVector2 temp(0.0,0.0);
-        temp.SetMagPhi(et,phi);
+        int ieta = caloTowers->ieta[jTower];
+        double phi = (TMath::Pi()/36.0) * (double)caloTowers->iphi[jTower];
+        double et = 0.5 * (double)caloTowers->iet[jTower];
 
-        if( abs(ieta) <= 28 ) met -= temp;
-        metHF -= temp;
+        if( abs(ieta) < 28 ) {
+            met.AddEt(et,phi);
+            fRecalcL1MetNot28.AddEt(et,phi);
+            fRecalcL1MetNot28HF.AddEt(et,phi);
+        } else if( abs(ieta) == 28 ){
+            met.AddEt(et,phi);
+            fRecalcL1Met28Only.AddEt(et,phi);
+        } else{
+            fRecalcL1MetNot28HF.AddEt(et,phi);
+        }
+        metHF.AddEt(et,phi);
     }
-    fRecalcL1Met = met.Mod();
-    fRecalcL1MetPhi = met.Phi();
-    fRecalcL1MetHF = metHF.Mod();
-    fRecalcL1MetPhiHF = metHF.Phi();
+    fRecalcL1Met = met.met();
+    fRecalcL1MetPhi = met.phi();
+    fRecalcL1MetHF = metHF.met();
+    fRecalcL1MetPhiHF = metHF.phi();
 }
 
-void TL1EventClass::GetRecalcL1EmuMet()
-{
-    TVector2 met(0.0,0.0), metHF(0.0,0.0);
+void TL1EventClass::GetRecalcL1EmuMet() {
+    MissingEt met,metHF;
     auto caloTowers = fPrimitiveEvent->fEmuCaloTowers;
-    int ieta(0);
-    double phi(0.0), et(0.0);
-    for(int jTower=0; jTower<caloTowers->nTower; ++jTower)
-    {
-        ieta = caloTowers->ieta[jTower];
-        phi = (TMath::Pi()/36.0) * (double)caloTowers->iphi[jTower];
-        et = 0.5 * (double)caloTowers->iet[jTower];
-        TVector2 temp(0.0,0.0);
-        temp.SetMagPhi(et,phi);
+    const int nTow = caloTowers->nTower;
 
-        if( abs(ieta) <= 28 ) met -= temp;
-        metHF -= temp;
+    int nTT4=0;
+    for(int jTower=0; jTower<caloTowers->nTower; ++jTower)
+        if(abs(caloTowers->ieta[jTower])<5) ++nTT4;
+
+    static const double etaSizes[] = 
+            {1.72, 2.05, 1.72, 4.02, 3.29, 2.01, 2.02, 2.00,  
+             2.02, 2.  , 2.03, 1.99, 2.01, 2.03, 1.99, 3.47}; 
+
+    for(int jTower=0; jTower<caloTowers->nTower; ++jTower) {
+        const int ieta = caloTowers->ieta[jTower];
+        const double phi = (TMath::Pi()/36.0) * (double)caloTowers->iphi[jTower];
+        const double et = 0.5 * (double)caloTowers->iet[jTower];
+        double et_pus28only=et;
+        double et_pusAll=et;
+
+        // Calculate PUS
+        if(abs(ieta)==28){
+            //et_pus28only = 1 + et - 0.5*round((1./8)*pow((et-0.5),0.5)*(floor(nTow/128)));
+            et_pus28only = et - 0.5*round(7*(nTT4/100.)); 
+            if(et_pus28only<0) et_pus28only = 0;
+        }
+        if( abs(ieta) > 24 ){
+            et_pusAll = et - 0.5*round((etaSizes[abs(ieta)-25]/4)*7*(nTT4/100.));
+            if(et_pusAll < 0.) et_pusAll = 0.;
+        }
+
+        // MET sums
+        const double threshold_et=0.5*(round(abs(ieta)/10.)+1) ;
+        if( abs(ieta) <= 28 ){
+            fRecalcL1EmuMet.AddEt(et,phi);
+            fRecalcL1EmuMetPUS.AddEt(et_pusAll,phi);
+            fRecalcL1EmuMetPUS28.AddEt(et_pus28only,phi);
+            if (et > threshold_et){
+                fRecalcL1EmuMetPUSThresh.AddEt(et_pusAll,phi);
+            }
+            if( abs(ieta) < 28 ){
+                fRecalcL1EmuMetNot28.AddEt(et,phi);
+            } else if( abs(ieta) == 28 ){
+                fRecalcL1EmuMet28Only.AddEt(et,phi);
+            }
+        }
+        fRecalcL1EmuMetHF.AddEt(et,phi);
+        fRecalcL1EmuMetPUSHF.AddEt(et_pusAll,phi);
+        if (et > threshold_et){
+            fRecalcL1EmuMetPUSThreshHF.AddEt(et_pusAll,phi);
+        }
     }
-    fRecalcL1EmuMet = met.Mod();
-    fRecalcL1EmuMetPhi = met.Phi();
-    fRecalcL1EmuMetHF = metHF.Mod();
-    fRecalcL1EmuMetPhiHF = metHF.Phi();
 }
 
 void TL1EventClass::GetRecalcRecoHtSums()

@@ -1,5 +1,7 @@
 #include "TStyle.h"
 
+#ifndef TDRSTYLE_C
+#define TDRSTYLE_C
 // tdrGrid: Turns the grid lines on (true) or off (false)
 
 void tdrGrid(TStyle tdrStyle, bool gridOn) {
@@ -173,3 +175,5 @@ void SetMyStyle(int palette, double rmarg, TStyle * myStyle)
     myStyle->SetPadRightMargin(rmarg);
     myStyle->cd();
 }
+
+#endif

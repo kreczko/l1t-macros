@@ -27,8 +27,8 @@ void makeRates(const int & CHUNK, const int & NJOBS, const int & NENT, const boo
     std::map< std::string, TL1Rates* > rates = sumRates(dataset);
 
     std::vector<std::string> inDir = dataset->inFiles;
-    std::string outDir( dataset->outDir+"_hadd/Turnons/" );
-    if(!COMBINE) outDir = dataset->outDir + Form("_CHUNK%i/Turnons/",CHUNK);
+    std::string outDir( dataset->outDir+"_hadd/Rates/" );
+    if(!COMBINE) outDir = dataset->outDir + Form("_CHUNK%i/Rates/",CHUNK);
     else inDir.clear();
     TL1EventClass * event(new TL1EventClass(inDir));
 
@@ -38,6 +38,8 @@ void makeRates(const int & CHUNK, const int & NJOBS, const int & NENT, const boo
         it->second->SetSample(dataset->sampleName, dataset->sampleTitle);
         it->second->SetTrigger(dataset->triggerName, dataset->triggerTitle);
         it->second->SetRun(dataset->run);
+        it->second->SetPuType(dataset->puType);
+        it->second->SetPuBins(dataset->puBins);
         it->second->SetOutDir(outDir);
         if( !COMBINE ) it->second->InitPlots();
         else it->second->OverwritePlots();
@@ -58,16 +60,26 @@ void makeRates(const int & CHUNK, const int & NJOBS, const int & NENT, const boo
         event->GetEntry(i);
         TL1Progress::PrintProgressBar(i-start, end-start);
 
-        //int pu = event->GetPEvent()->fVertex->nVtx;
+        const int pu = event->GetPEvent()->fVertex->nVtx;
+	//if(pu<40) continue;
 
         // Get the relevant event parameters
         double l1MetBE = event->fL1Met;
+	double l1MetBEEmu = event->fL1EmuMet;
+	double l1MetBERecalcEmu = event->fRecalcL1EmuMet;
+	double l1MetBERecalc = event->fRecalcL1Met;
         double l1MetHF = event->fL1MetHF;
 
         if( rates.find("l1MetBE") != rates.end() )
-            rates["l1MetBE"]->Fill(l1MetBE, 0.);
+            rates["l1MetBE"]->Fill(l1MetBE,1, pu);
+	if( rates.find("l1MetBEEmu") != rates.end() )
+            rates["l1MetBEEmu"]->Fill(l1MetBEEmu,1, pu);
+	if( rates.find("l1MetBERecalc") != rates.end() )
+            rates["l1MetBERecalc"]->Fill(l1MetBERecalc,1,pu);
+	if( rates.find("l1MetBERecalcEmu") != rates.end() )
+	  rates["l1MetBERecalcEmu"]->Fill(l1MetBERecalcEmu,1, pu);
         if( rates.find("l1MetHF") != rates.end() )
-            rates["l1MetHF"]->Fill(l1MetHF, 0.);
+            rates["l1MetHF"]->Fill(l1MetHF,1, pu);
     }
 
     for(auto it=rates.begin(); it!=rates.end(); ++it)

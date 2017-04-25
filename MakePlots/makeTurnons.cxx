@@ -1,6 +1,8 @@
 #include <string>
 #include <vector>
 
+#include <TSystem.h>
+
 #include "../Plotting/tdrstyle.C"
 #include "../Event/TL1EventClass.h"
 #include "../Utilities/TL1Progress.C"
@@ -24,6 +26,8 @@ void makeTurnons(const int & CHUNK, const int & NJOBS, const int & NENT, const b
 
     // Get config objects
     ntuple_cfg * dataset = new ntuple_cfg(GetNtuple_cfg());
+    cout<<dataset->outDirBase<<endl;
+    cout<<dataset->baseOWdir<<endl;
     std::map< std::string, TL1Turnon* > turnons = sumTurnons(dataset);
 
     std::vector<std::string> inDir = dataset->inFiles;
@@ -67,10 +71,13 @@ void makeTurnons(const int & CHUNK, const int & NJOBS, const int & NENT, const b
                 continue;
         
         // Get the relevant event parameters
-        int pu = 0;//event->GetPEvent()->fVertex->nVtx;
+        const int pu = event->GetPEvent()->fVertex->nVtx;
         auto sums = event->GetPEvent()->fSums;
 
         double l1MetBE = event->fL1Met;
+	double l1MetBEEmu = event->fL1EmuMet;
+	double l1MetBERecalcEmu = event->fRecalcL1EmuMet;
+	double l1MetBERecalc = event->fRecalcL1Met;
         double caloMetBE = sums->caloMetBE;
         double l1Htt = event->fL1Htt;
         double recoHtt = sums->Ht;
@@ -78,18 +85,35 @@ void makeTurnons(const int & CHUNK, const int & NJOBS, const int & NENT, const b
         //----- MET -----//
         if( event->fMetFilterPassFlag )
             if( turnons.find("metBE") != turnons.end() )
-                turnons["metBE"]->Fill(caloMetBE, l1MetBE);
+                turnons["metBE"]->Fill(caloMetBE, l1MetBE,pu);
+	
+	
+        //----- MET Emu-----//
+        if( event->fMetFilterPassFlag )
+            if( turnons.find("metBEEmu") != turnons.end() )
+                turnons["metBEEmu"]->Fill(caloMetBE, l1MetBEEmu,pu);
+	
+
+	//----- MET Recalc -----//
+        if( event->fMetFilterPassFlag )
+	  if( turnons.find("metBERecalc") != turnons.end() )
+	    turnons["metBERecalc"]->Fill(caloMetBE, l1MetBERecalc,pu);
+	
+
+	//----- MET Recalc Emu-----//
+        if( event->fMetFilterPassFlag )
+	  if( turnons.find("metBERecalcEmu") != turnons.end() )
+	    turnons["metBERecalcEmu"]->Fill(caloMetBE, l1MetBERecalcEmu,pu);
 
         //----- HTT -----//
         if( turnons.find("htt") != turnons.end() )
-            turnons["htt"]->Fill(recoHtt, l1Htt);
+            turnons["htt"]->Fill(recoHtt, l1Htt,pu);
     }
 
     // End
     for(auto it=turnons.begin(); it!=turnons.end(); ++it)
     {
         it->second->DrawPlots();
-        it->second->DrawTurnons();
     }
     cout << "Output saved in:\n" << outDir << endl;
 }

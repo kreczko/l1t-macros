@@ -24,7 +24,7 @@ class TL1Resolution : public TL1Plots
         virtual void InitPlots();
         virtual void OverwritePlots();
         virtual void Fill(const double & xVal, const double & yVal, const int & pu=0);
-        virtual void DrawPlots();
+        virtual void DrawPlots(const char* name_append=NULL);
 
         void SetBins(const std::vector<double> & bins);
         void SetX(const std::string & xName, const std::string & xTitle);
@@ -112,7 +112,7 @@ void TL1Resolution::Fill(const double & xVal, const double & yVal, const int & p
     }
 }
 
-void TL1Resolution::DrawPlots()
+void TL1Resolution::DrawPlots(const char* name_append)
 {
     TCanvas * can(new TCanvas(Form("can_%f",this->GetRnd()),""));
 
