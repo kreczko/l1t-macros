@@ -29,7 +29,7 @@ ntuple_cfg benchmark_cfg();
 // The Ntuple cfg to use:
 ntuple_cfg GetNtuple_cfg()
 {
-  return benchmark_cfg();
+  return singleMuRun276243();
 }
 
 
@@ -202,11 +202,11 @@ ntuple_cfg benchmark_cfg()
   config.triggerTitle = "Single Muon";
   config.puFilename   = "";
   config.run          = "276243";
-  config.outDirBase   = "/vagrant/benchmark/legacy";
+  config.outDirBase   = "{{BENCHMARK_OUTPUT_FOLDER}}";
   config.doFit        = false;
   config.puType       = {"0PU12","13PU19","20PU"};
   config.puBins       = {0,13,20,999};
-  config.inFiles      = {"file:///vagrant/data/*.root"};
+  config.inFiles      = {"{{BENCHMARK_DATA}}/*.root"};
   config.baseOWdir    = config.outDirBase +
       "/20161101_"+config.sampleName+"_run-"+config.run+"_"+\
       config.triggerName+"_hadd/";
