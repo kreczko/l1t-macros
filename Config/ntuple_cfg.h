@@ -206,7 +206,7 @@ ntuple_cfg benchmark_cfg()
   config.doFit        = false;
   config.puType       = {"0PU12","13PU19","20PU"};
   config.puBins       = {0,13,20,999};
-  config.inFiles      = {"{{BENCHMARK_DATA}}/*.root"};
+  config.inFiles      = {"{{BENCHMARK_DATA}}"};
   config.baseOWdir    = config.outDirBase +
       "/20161101_"+config.sampleName+"_run-"+config.run+"_"+\
       config.triggerName+"_hadd/";
