@@ -2,6 +2,7 @@
 #define TL1TURNON_H
 
 #include <string>
+#include <sstream>
 
 #include <TMarker.h>
 #include <TFile.h>
@@ -37,10 +38,10 @@ class TL1Turnon : public TL1Plots
         void SetX(const std::string & xName, const std::string & xTitle){ fXName = xName; fXTitle = xTitle; }
         void SetSeed(const std::string & seedName, const std::string & seedTitle){ fSeedName = seedName; fSeedTitle = seedTitle; }
         void SetFit(const bool & doFit){ fDoFit = doFit; }
+        void DrawTurnons();
 
     private:
         void DrawCmsStamp(std::string stampPos="Left");
-        void DrawTurnons();
         void DrawFitResults();
         void DrawCmsStampTurnon(const double & max);
         TF1* fit(TGraphAsymmErrors * eff, double p50);
@@ -140,7 +141,7 @@ void TL1Turnon::Fill(const double & xVal, const double & seedVal, const int & pu
 
 void TL1Turnon::DrawPlots(const char* name_append)
 {
-    TCanvas * can(new TCanvas(Form("can_%f",this->GetRnd()),"")); 
+    TCanvas * can(new TCanvas(Form("can_%f",this->GetRnd()),""));
     TLegend * leg(new TLegend(0.58,0.35,0.88,0.55));
     for(unsigned i=0; i<fPlots.size(); ++i)
     {
@@ -396,9 +397,9 @@ void TL1Turnon::DrawFitResults(){
             plot->SetPointError(point,mu_err,sigma_err);
             if(ipu==0) continue; // skip the next steps if this is not in a puBin
             if(point==0) {
-                marker_start->SetX(mu); marker_start->SetY(sigma); 
+                marker_start->SetX(mu); marker_start->SetY(sigma);
             }
-            marker_stop->SetX(mu); marker_stop->SetY(sigma); 
+            marker_stop->SetX(mu); marker_stop->SetY(sigma);
             ++point;
         }
         for(unsigned ipu=point; ipu<GetPuType().size(); ++ipu){
@@ -452,8 +453,8 @@ TF1* TL1Turnon::fit(TGraphAsymmErrors * eff, double p50){
     // From Wikipedia ( https://en.wikipedia.org/wiki/Exponentially_modified_Gaussian_distribution ) the CDF of an EMG is:
     // CDF = \Phi (u,0,v)-e^{-u+v^{2}/2+\log(\Phi (u,v^{2},v))}}
     // \Phi (x,\mu ,\sigma ) is the CDF of a Gaussian distribution,
-    // u=\lambda (x-\mu ) 
-    // v=\lambda \sigma 
+    // u=\lambda (x-\mu )
+    // v=\lambda \sigma
     // \lambda (>0) := the exponential decay parameter
     // \mu := the mean of the Gaussian component
     // \sigma^2 (>0):= the variance of the Gaussian component
@@ -495,7 +496,7 @@ TF1* TL1Turnon::fit(TGraphAsymmErrors * eff, double p50){
             const double sigma = 1/functions[0]->GetParameter(1);
             const double lambda = 0.05; // should be within 0.04 and 0.06 it seems
 
-            const double p0 = mu; 
+            const double p0 = mu;
             const double p1 = 1/(sigma);
             //const double p1 = 1/(sigma * sigma *lambda);
             const double p2 = lambda;
@@ -509,7 +510,7 @@ TF1* TL1Turnon::fit(TGraphAsymmErrors * eff, double p50){
         //fitFcn.FixParameter(1,p50);
         //fitFcn.SetParameters( 1.000,150.0,(double)p50 );
 
-        TFitResultPtr success=eff->Fit(fitFcn->GetName(),"ESMQ ROB EX0+"); 
+        TFitResultPtr success=eff->Fit(fitFcn->GetName(),"ESMQ ROB EX0+");
         //if((int)success !=0){
         //    cout<<"Fit failed: "<<fitFcn.GetParameter( 0)<<" "<<fitFcn.GetParameter(1)<<endl;
         //    fitFcn.SetParameters( 0,0 );
@@ -517,7 +518,7 @@ TF1* TL1Turnon::fit(TGraphAsymmErrors * eff, double p50){
 
         //for(int i=0; i<10; ++i)
         //    //eff->Fit(fitFcn.GetName(),"E0M");
-        //    eff->Fit(fitFcn.GetName(),"ELMN"); 
+        //    eff->Fit(fitFcn.GetName(),"ELMN");
 
         fitFcn->SetLineColor(eff->GetLineColor());
         fitFcn->SetLineWidth(2);
